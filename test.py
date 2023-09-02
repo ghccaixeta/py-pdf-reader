@@ -1,24 +1,50 @@
-# Sua string de texto
-texto = """xsdasd
-a
-b
-c
+# Seu texto completo
+texto = """
+TOUCH COMUNICACAO INTEGRADA LTDA.
+CNPJ: 08.968.873/0001-02 CC: Centro de Custo Adiantamento
+Mensalista Julho de 2023
+Código Nome do Funcionário CBO Departamento Filial
+3 GISLAINE DE VARGAS TRENZ 521110 1 1
+VENDEDOR PLENO Admissão: 15/08/2022
 Código Descrição Referência Vencimentos Descontos
-980 ADIANTAMENTO SALARIAL 40,00 950,40 .obicer
+980 ADIANTAMENTO SALARIAL 40,00 1.200,00 .obicer
 etsen
-Outro texto aqui.
+oiránoicnuF
+adanimircsid
+od
+arutanissA
+adiuqíl
+aicnâtropmi
+a
+odibecer
+ret
+oralceD
+_______/____/____
+Total de Vencimentos Total de Descontos
+1.200,00 0,00 ataD
+
+Valor Líquido 1.200,00
+Salário Base Sal. Contr. INSS Base Cálc. FGTS F.G.T.S do Mês Base Cálc. IRRF Faixa IRRF
+3.000,00 0,00 0,00 0,00 0,00 0,00
+TOUCH COMUNICACAO INTEGRADA LTDA.
+CNPJ: 08.968.873/0001-02 CC: Centro de Custo Adiantamento
 """
 
-# Encontre a posição da primeira linha
-posicao_primeira_linha = texto.find("\n") +2  # Adicione 1 para ignorar o caractere de nova linha
+# Encontre a posição da linha que contém "Faixa IRRF"
+posicao_faixa_irrf = texto.find("IRRF")
+print(posicao_faixa_irrf)
 
-# Encontre a posição de "etsen" a partir da posição da primeira linha
-posicao_etsen = texto.find("etsen", posicao_primeira_linha)
+# Encontre a posição da primeira linha após "Faixa IRRF"
+linha_1_apos_faixa_irrf = texto.find("\n", posicao_faixa_irrf + 1)
+print(linha_1_apos_faixa_irrf)
+# Encontre a posição da segunda linha após "Faixa IRRF"
+linha_2_apos_faixa_irrf = texto.find("\n", linha_1_apos_faixa_irrf + 1)
+print(linha_2_apos_faixa_irrf)
 
-# Verifique se ambas as strings foram encontradas
-if posicao_primeira_linha != -1 and posicao_etsen != -1:
-    # Extraia o conteúdo entre as posições encontradas
-    conteudo = texto[posicao_primeira_linha:posicao_etsen].strip()
+# Verifique se ambas as posições foram encontradas
+if posicao_faixa_irrf != -1 and linha_2_apos_faixa_irrf != -1:
+    # Pegue o conteúdo entre a primeira linha e a segunda linha abaixo de "Faixa IRRF"
+    conteudo = texto[:linha_2_apos_faixa_irrf].strip()
     print(conteudo)
 else:
-    print("A primeira linha ou 'etsen' não foi encontrada no texto.")
+    print("Linha com 'Faixa IRRF' ou segunda linha abaixo não foi encontrada.")

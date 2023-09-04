@@ -1,6 +1,16 @@
 import pdfplumber
 import json
-inputPDF = pdfplumber.open('recibo-pagamento.pdf')
+import openpyxl
+import shutil
+import datetime
+
+pdfFile = "recibo-pagamento.pdf"
+xlsFile = pdfFile.replace(".pdf",".xlsx")
+
+year = datetime.date.today().year
+month = datetime.date.today().month
+
+inputPDF = pdfplumber.open(pdfFile)
 
 class Contracheque:
     def __init__(
@@ -8,7 +18,7 @@ class Contracheque:
         nomeFantasia = None,
         cnpj = None,
         centroDeCusto = None,
-        tipoLancamento = None,
+        evento = None,
         tipoJornada = None,
         periodo = None,
         codigoFuncionario = None,
@@ -32,7 +42,7 @@ class Contracheque:
         self.nomeFantasia = nomeFantasia, 
         self.cnpj = cnpj, 
         self.centroDeCusto = centroDeCusto,
-        self.tipoLancamento = tipoLancamento,
+        self.evento = evento,
         self.period = periodo,
         self.codigoFuncionari = codigoFuncionario,
         self.nomeFuncionari = nomeFuncionario,
@@ -57,7 +67,7 @@ class Contracheque:
             "nomeFantasia": self.nomeFantasia,
             "cnpj": self.cnpj,
             "centroDeCusto": self.centroDeCusto,
-            "tipoLancamento": self.tipoLancamento,
+            "evento": self.evento,
             "tipoJornada": self.tipoJornada,
             "periodo": self.periodo,
             "codigoFuncionario": self.codigoFuncionario,
@@ -80,7 +90,7 @@ class Contracheque:
         }
 
     # def __str__(self):
-    #     return f"nomeFantasia: {self.nomeFantasia},cnpj: {self.cnpj},tipoLancamento: {self.tipoLancamento},tipoJornada: {self.tipoJornada},periodo: {self.periodo},codigoFuncionario: {self.codigoFuncionario},nomeFuncionario: {self.nomeFuncionario},cargoFuncionario: {self.cargoFuncionario},cbo: {self.cbo},departamento: {self.departamento},filial: {self.filial},admissaoFuncionario: {self.admissaoFuncionario},lancamentos: {self.lancamentos},totalVencimentos: {self.totalVencimentos},totalDescontos: {self.totalDescontos},valorLiquido: {self.valorLiquido},salarioBase: {self.salarioBase},salarioINSS: {self.salarioINSS},baseCalcFGTS: {self.baseCalcFGTS},fgtsMes: {self.fgtsMes},baseCalcIRRF: {self.baseCalcIRRF},faixaIRRF: {self.faixaIRRF}"
+    #     return f"nomeFantasia: {self.nomeFantasia},cnpj: {self.cnpj},evento: {self.evento},tipoJornada: {self.tipoJornada},periodo: {self.periodo},codigoFuncionario: {self.codigoFuncionario},nomeFuncionario: {self.nomeFuncionario},cargoFuncionario: {self.cargoFuncionario},cbo: {self.cbo},departamento: {self.departamento},filial: {self.filial},admissaoFuncionario: {self.admissaoFuncionario},lancamentos: {self.lancamentos},totalVencimentos: {self.totalVencimentos},totalDescontos: {self.totalDescontos},valorLiquido: {self.valorLiquido},salarioBase: {self.salarioBase},salarioINSS: {self.salarioINSS},baseCalcFGTS: {self.baseCalcFGTS},fgtsMes: {self.fgtsMes},baseCalcIRRF: {self.baseCalcIRRF},faixaIRRF: {self.faixaIRRF}"
 
 def getLineContent(fullText, searchText):
     
@@ -116,13 +126,7 @@ def getLancamento(fulltext):
         
     return lancamentosArray
 
-
-    
-        
-    
-
-
-pageNumber = 0;
+pageNumber = 0
 
 output = None
 
@@ -198,11 +202,42 @@ for item in contrachequesArray:
 
     contracheque.lancamentos = getLancamento(item)
 
-    print(json.dumps(contracheque.to_dict(), indent=4))
-
+    contracheques.append(contracheque)
     
 
-    # print(salarioBase, salarioINSS,baseCalcFGTS,fgtsMes,baseCalcIRRF,faixaIRRF)
+shutil.copy('Template_Contracheques.xlsx', xlsFile)
 
-    
-    
+workbook = openpyxl.load_workbook(xlsFile)
+sheet = workbook.active
+
+lineNumber = 2
+
+for item in contracheques:
+
+    for lancamentoItem in item.lancamentos:
+
+        sheet[f'A{lineNumber}'] = item.codigoFuncionario
+        sheet[f'B{lineNumber}'] = f"{lancamentoItem['cod']}_{year}_{month}"
+        # sheet[f'C{lineNumber}'] = item.codigoFuncionario
+        sheet[f'D{lineNumber}'] = datetime.date.today()
+        sheet[f'F{lineNumber}'] = item.totalVencimentos
+        sheet[f'G{lineNumber}'] = item.totalDescontos
+        sheet[f'H{lineNumber}'] = item.valorLiquido
+        sheet[f'I{lineNumber}'] = item.nomeFantasia
+        sheet[f'J{lineNumber}'] = item.cnpj
+        sheet[f'K{lineNumber}'] = item.codigoFuncionario
+        sheet[f'L{lineNumber}'] = item.nomeFuncionario
+        sheet[f'M{lineNumber}'] = item.cargoFuncionario
+        sheet[f'N{lineNumber}'] = item.departamento
+        sheet[f'P{lineNumber}'] = item.tipoJornada
+        sheet[f'Q{lineNumber}'] = item.salarioBase
+        sheet[f'R{lineNumber}'] = lancamentoItem["cod"]
+        sheet[f'S{lineNumber}'] = lancamentoItem["descricao"]
+        sheet[f'T{lineNumber}'] = lancamentoItem["vencimentos"]
+        sheet[f'U{lineNumber}'] = lancamentoItem["descontos"]
+        sheet[f'V{lineNumber}'] = lancamentoItem["referencia"]
+
+        lineNumber += 1
+
+workbook.save(xlsFile)
+

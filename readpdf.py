@@ -1,38 +1,38 @@
 import pdfplumber
-
+import json
 inputPDF = pdfplumber.open('recibo-pagamento.pdf')
 
 class Contracheque:
     def __init__(
         self,
-        nomeFantasia, 
-        cnpj, 
-        centroDeCusto,
-        tipoLancamento,
-        tipoJornada,
-        periodo,
-        codigoFuncionario,
-        nomeFuncionario,
-        cargoFuncionario,
-        cbo,
-        departamento,
-        filial,
-        admissaoFuncionario,
-        lancamentos,
-        totalVencimentos,
-        totalDescontos,
-        valorLiquido,
-        salarioBase,
-        salarioINSS,
-        baseCalcFGTS,
-        fgtsMes,
-        baseCalcIRRF,
-        faixaIRRF
+        nomeFantasia = None,
+        cnpj = None,
+        centroDeCusto = None,
+        tipoLancamento = None,
+        tipoJornada = None,
+        periodo = None,
+        codigoFuncionario = None,
+        nomeFuncionario = None,
+        cargoFuncionario = None,
+        cbo = None,
+        departamento = None,
+        filial = None,
+        admissaoFuncionario = None,
+        lancamentos = None,
+        totalVencimentos = None,
+        totalDescontos = None,
+        valorLiquido = None,
+        salarioBase = None,
+        salarioINSS = None,
+        baseCalcFGTS = None,
+        fgtsMes = None,
+        baseCalcIRRF = None,
+        faixaIRRF = None
         ):
         self.nomeFantasia = nomeFantasia, 
         self.cnpj = cnpj, 
-        self.centroDeCust = centroDeCusto,
-        self.tipoLancament = tipoLancamento,
+        self.centroDeCusto = centroDeCusto,
+        self.tipoLancamento = tipoLancamento,
         self.period = periodo,
         self.codigoFuncionari = codigoFuncionario,
         self.nomeFuncionari = nomeFuncionario,
@@ -52,6 +52,36 @@ class Contracheque:
         self.baseCalcIRR = baseCalcIRRF,
         self.faixaIR = faixaIRRF
 
+    def to_dict(self):
+        return {
+            "nomeFantasia": self.nomeFantasia,
+            "cnpj": self.cnpj,
+            "centroDeCusto": self.centroDeCusto,
+            "tipoLancamento": self.tipoLancamento,
+            "tipoJornada": self.tipoJornada,
+            "periodo": self.periodo,
+            "codigoFuncionario": self.codigoFuncionario,
+            "nomeFuncionario": self.nomeFuncionario,
+            "cargoFuncionario": self.cargoFuncionario,
+            "cbo": self.cbo,
+            "departamento": self.departamento,
+            "filial": self.filial,
+            "admissaoFuncionario": self.admissaoFuncionario,
+            "lancamentos": self.lancamentos,
+            "totalVencimentos": self.totalVencimentos,
+            "totalDescontos": self.totalDescontos,
+            "valorLiquido": self.valorLiquido,
+            "salarioBase": self.salarioBase,
+            "salarioINSS": self.salarioINSS,
+            "baseCalcFGTS": self.baseCalcFGTS,
+            "fgtsMes": self.fgtsMes,
+            "baseCalcIRRF": self.baseCalcIRRF,
+            "faixaIRRF": self.faixaIRRF,
+        }
+
+    # def __str__(self):
+    #     return f"nomeFantasia: {self.nomeFantasia},cnpj: {self.cnpj},tipoLancamento: {self.tipoLancamento},tipoJornada: {self.tipoJornada},periodo: {self.periodo},codigoFuncionario: {self.codigoFuncionario},nomeFuncionario: {self.nomeFuncionario},cargoFuncionario: {self.cargoFuncionario},cbo: {self.cbo},departamento: {self.departamento},filial: {self.filial},admissaoFuncionario: {self.admissaoFuncionario},lancamentos: {self.lancamentos},totalVencimentos: {self.totalVencimentos},totalDescontos: {self.totalDescontos},valorLiquido: {self.valorLiquido},salarioBase: {self.salarioBase},salarioINSS: {self.salarioINSS},baseCalcFGTS: {self.baseCalcFGTS},fgtsMes: {self.fgtsMes},baseCalcIRRF: {self.baseCalcIRRF},faixaIRRF: {self.faixaIRRF}"
+
 def getLineContent(fullText, searchText):
     
     for item in fullText:
@@ -60,6 +90,37 @@ def getLineContent(fullText, searchText):
 
     
     return ""
+
+def getLancamento(fulltext):
+    cabecalho = fulltext.find("Descontos\n") + 9
+    fimLancamentos = fulltext.find("etsen")
+
+    lancamentos = fulltext[cabecalho:fimLancamentos].strip()
+
+    lines = lancamentos.splitlines()
+
+    lancamentosArray = []
+
+    for item in lines:
+        colunas = item.split(" ")
+
+        lancamento = {
+            "cod": colunas[0],
+            "descricao": ' '.join(map(str, colunas[1:-3])),
+            "referencia": colunas[-3],
+            "vencimentos": colunas[-2],
+            "descontos": colunas[-1] if colunas[-1] != '.obicer' else None,
+        }
+
+        lancamentosArray.append(lancamento)
+        
+    return lancamentosArray
+
+
+    
+        
+    
+
 
 pageNumber = 0;
 
@@ -90,29 +151,58 @@ for item in conteudoArray:
 contracheques = [];
 
 for item in contrachequesArray:
+
+    contracheque = Contracheque()
+
     lines = item.splitlines()
-    nomeFantasia = lines[0]
+    contracheque.nomeFantasia = lines[0]
+    
     linha02 = lines[1]
-    cnpj = linha02.split(" ")[1]
+    contracheque.cnpj = linha02.split(" ")[1]
+    
     linha03 = lines[2]
-    tipoJornada = linha03.split(" ")[:-3][0]
-    periodo = ' '.join(linha03.split(" ")[-3:])
+    contracheque.tipoJornada = linha03.split(" ")[:-3][0]
+    contracheque.periodo = ' '.join(linha03.split(" ")[-3:])
+
+    linha04 = lines[4]
+    splitLinha04 = linha04.split(" ")
+    contracheque.codigoFuncionario = splitLinha04[0]
+    contracheque.nomeFuncionario = ' '.join(splitLinha04[1:-3])
+    contracheque.cbo = splitLinha04[-3]
+    contracheque.departamento = splitLinha04[-2]
+    contracheque.filial = splitLinha04[-1]
+
+    linha05 = lines[5]
+    splitLinha05 = linha05.split("Admissão")
+    contracheque.cargoFuncionario= splitLinha05[0]
+    contracheque.admissaoFuncionario = splitLinha05[1]
 
     vencimentos = getLineContent(lines, 'ataD')
 
-    totalVencimentos = vencimentos.split(" ")[0]
-    totalDescontos = vencimentos.split(" ")[1]
+    contracheque.totalVencimentos = vencimentos.split(" ")[0]
+    contracheque.totalDescontos = vencimentos.split(" ")[1]
+
+
+    lineValorLiquido = getLineContent(lines, 'Valor Líquido')
+    contracheque.valorLiquido = lineValorLiquido.split(" ")[-1]
+    
 
     linesSplit = lines[-1].split(" ")
 
-    salarioBase = linesSplit[0]
-    salarioINSS = linesSplit[1]
-    baseCalcFGTS = linesSplit[2]
-    fgtsMes = linesSplit[3]
-    baseCalcIRRF = linesSplit[4]
-    faixaIRRF = linesSplit[5]
+    contracheque.salarioBase = linesSplit[0]
+    contracheque.salarioINSS = linesSplit[1]
+    contracheque.baseCalcFGTS = linesSplit[2]
+    contracheque.fgtsMes = linesSplit[3]
+    contracheque.baseCalcIRRF = linesSplit[4]
+    contracheque.faixaIRRF = linesSplit[5]
 
-    print(salarioBase, salarioINSS,baseCalcFGTS,fgtsMes,baseCalcIRRF,faixaIRRF)
+    contracheque.lancamentos = getLancamento(item)
+
+    print(json.dumps(contracheque.to_dict(), indent=4))
+
+    
+
+    # print(salarioBase, salarioINSS,baseCalcFGTS,fgtsMes,baseCalcIRRF,faixaIRRF)
 
     
     

@@ -1,16 +1,20 @@
-# Seu texto
 texto = """
-Código Nome do Funcionário CBO Departamento Filial
-8 EDIMARA CAMILA ROLIM DE MOURA 521110 1 1
-VENDEDOR PLENO Admissão: 08/03/2023
 Código Descrição Referência Vencimentos Descontos
-980 ADIANTAMENTO SALARIAL 40,00 1.200,00 .obicer
+980 ADIANTAMENTO SALARIAL 40,00 950,40 .obicer
+980 ADIANTAMENTO SALARIAL 40,00 950,40 .obicer
+980 ADIANTAMENTO SALARIAL 40,00 950,40 .obicer
+etsen
+Outro texto aqui.
 """
 
-# Divida o texto em linhas usando splitlines()
-linhas = texto.splitlines()
+# Encontre a posição inicial e final
+posicao_inicio = texto.find("Código Descrição Referência Vencimentos Descontos")
+posicao_fim = texto.find("etsen")
 
-# Itere pelas linhas para encontrar a linha que contém ".obicer" e imprima-a
-for linha in linhas:
-    if ".obicer" in linha:
-        print(linha)
+# Verifique se ambas as strings foram encontradas
+if posicao_inicio != -1 and posicao_fim != -1:
+    # Extraia o conteúdo entre as posições encontradas
+    conteudo = texto[posicao_inicio + len("Código Descrição Referência Vencimentos Descontos"):posicao_fim].strip()
+    print(conteudo)
+else:
+    print("Uma ou ambas as strings não foram encontradas no texto.")
